@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: gboneapparel-backend
+    env: node
+    region: oregon
+    plan: free
+    rootDirectory: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
