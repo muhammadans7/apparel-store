@@ -22,9 +22,8 @@ class PaymentService {
       amount: Math.round(amount * 100),
       currency: currency || "usd",
       metadata,
-      automatic_payment_methods: {
-        enabled: true,
-      },
+      // Only allow card payments (removes Crypto, Cash App, Amazon Pay)
+      payment_method_types: ["card"],
     });
 
     return paymentIntent;
