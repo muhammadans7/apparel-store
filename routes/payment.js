@@ -24,10 +24,24 @@ router.post("/create-payment-intent", async (req, res) => {
       return res.status(400).json({ error: "Amount and userId are required" });
     }
 
+    // Create simplified order summary for Stripe metadata (500 char limit)
+    const orderSummary = orderItems.map((item) => ({
+      id: item.id,
+      qty: item.quantity,
+      price: item.price,
+    }));
+
+    // Truncate if still too long
+    let orderItemsStr = JSON.stringify(orderSummary);
+    if (orderItemsStr.length > 450) {
+      orderItemsStr = orderItemsStr.substring(0, 450) + "...";
+    }
+
     const metadata = {
       userId,
-      orderItems: JSON.stringify(orderItems),
+      orderItems: orderItemsStr,
       customerEmail: shippingDetails?.customerEmail || "",
+      itemCount: String(orderItems.length),
     };
 
     const paymentIntent = await paymentService.createPaymentIntent(
@@ -36,13 +50,14 @@ router.post("/create-payment-intent", async (req, res) => {
       metadata
     );
 
+    // Save FULL order details to database (no size limit)
     const paymentRecordId = await paymentService.savePaymentRecord({
       userId,
       stripePaymentIntentId: paymentIntent.id,
       amount,
       currency: currency || "usd",
       status: "pending",
-      orderItems,
+      orderItems, // Full order items saved to Firestore
       shippingDetails,
     });
 
